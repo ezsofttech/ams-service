@@ -10,14 +10,6 @@ export class CreateAssignmentDto {
   @IsNotEmpty()
   location_id: string;
 
-  @ApiProperty({ example: '09:00' })
-  @IsNotEmpty()
-  shift_start: string;
-
-  @ApiProperty({ example: '18:00' })
-  @IsNotEmpty()
-  shift_end: string;
-
   @ApiPropertyOptional({ example: '2025-01-15' })
   @IsOptional()
   assigned_date?: string;
@@ -28,11 +20,4 @@ export class UpdateAssignmentDto {
   @IsOptional()
   location_id?: string;
 
-  @ApiPropertyOptional({ example: '08:00' })
-  @IsOptional()
-  shift_start?: string;
-
-  @ApiPropertyOptional({ example: '17:00' })
-  @IsOptional()
-  shift_end?: string;
 }

@@ -83,14 +83,6 @@ export class ReportsService {
         (sum: number, r: any) => sum + (r.total_work_hours || 0),
         0,
       );
-      const lateArrivals = recs.filter((r: any) => {
-        const loc = r.location_id;
-        if (!loc?.shift_start) return false;
-        const [h, m] = loc.shift_start.split(':').map(Number);
-        const shiftStart = new Date(r.punch_in_time);
-        shiftStart.setHours(h, m, 0, 0);
-        return new Date(r.punch_in_time) > shiftStart;
-      }).length;
 
       const emp = recs[0].employee_id;
       summary.push({
@@ -98,7 +90,6 @@ export class ReportsService {
         employee_id: emp?.employee_id,
         total_working_days: recs.length,
         total_hours_worked: Math.round(totalHours * 100) / 100,
-        late_arrivals: lateArrivals,
       });
     }
 

@@ -12,12 +12,6 @@ export class Assignment {
   location_id: Types.ObjectId;
 
   @Prop({ required: true })
-  shift_start: string;
-
-  @Prop({ required: true })
-  shift_end: string;
-
-  @Prop({ required: true })
   assigned_date: string;
 
   created_at: Date;

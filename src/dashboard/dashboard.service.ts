@@ -96,9 +96,6 @@ export class DashboardService {
     return {
       employee,
       assigned_location: (assignment as any)?.location_id || null,
-      shift_timing: assignment
-        ? { start: assignment.shift_start, end: assignment.shift_end }
-        : null,
       today: {
         date: today,
         status: todayAttendance

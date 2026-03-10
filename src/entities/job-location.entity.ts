@@ -20,12 +20,6 @@ export class JobLocation {
   @Prop({ required: true })
   radius: number;
 
-  @Prop({ required: true })
-  shift_start: string;
-
-  @Prop({ required: true })
-  shift_end: string;
-
   created_at: Date;
   updated_at: Date;
 }

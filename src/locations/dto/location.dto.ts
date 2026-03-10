@@ -22,13 +22,6 @@ export class CreateJobLocationDto {
   @IsNumber()
   radius?: number;
 
-  @ApiProperty({ example: '09:00' })
-  @IsNotEmpty()
-  shift_start: string;
-
-  @ApiProperty({ example: '18:00' })
-  @IsNotEmpty()
-  shift_end: string;
 }
 
 export class UpdateJobLocationDto {
@@ -55,11 +48,4 @@ export class UpdateJobLocationDto {
   @IsNumber()
   radius?: number;
 
-  @ApiPropertyOptional({ example: '08:00' })
-  @IsOptional()
-  shift_start?: string;
-
-  @ApiPropertyOptional({ example: '17:00' })
-  @IsOptional()
-  shift_end?: string;
 }
