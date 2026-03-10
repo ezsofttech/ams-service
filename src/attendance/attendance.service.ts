@@ -12,6 +12,10 @@ import {
   JobLocationDocument,
 } from '../entities/index.js';
 import { PunchInDto, PunchOutDto } from './dto/attendance.dto.js';
+import {
+  PaginationQueryDto,
+  paginate,
+} from '../common/dto/pagination.dto.js';
 
 @Injectable()
 export class AttendanceService {
@@ -125,29 +129,51 @@ export class AttendanceService {
     };
   }
 
-  async getHistory(employeeId: string, startDate?: string, endDate?: string) {
+  async getHistory(employeeId: string, pagination: PaginationQueryDto, startDate?: string, endDate?: string) {
+    const { page, limit } = pagination;
+    const skip = (page - 1) * limit;
+
     const filter: Record<string, unknown> = { employee_id: employeeId };
     if (startDate && endDate) {
       filter.date = { $gte: startDate, $lte: endDate };
     }
-    return this.attendanceModel
-      .find(filter)
-      .populate('location_id')
-      .sort({ date: -1 })
-      .exec();
+
+    const [data, total] = await Promise.all([
+      this.attendanceModel
+        .find(filter)
+        .populate('location_id')
+        .sort({ date: -1 })
+        .skip(skip)
+        .limit(limit)
+        .exec(),
+      this.attendanceModel.countDocuments(filter).exec(),
+    ]);
+
+    return paginate(data, total, page, limit);
   }
 
-  async getAllAttendance(date?: string) {
+  async getAllAttendance(pagination: PaginationQueryDto, date?: string) {
+    const { page, limit } = pagination;
+    const skip = (page - 1) * limit;
+
     const filter: Record<string, unknown> = {};
     if (date) {
       filter.date = date;
     }
-    return this.attendanceModel
-      .find(filter)
-      .populate('employee_id')
-      .populate('location_id')
-      .sort({ date: -1, punch_in_time: -1 })
-      .exec();
+
+    const [data, total] = await Promise.all([
+      this.attendanceModel
+        .find(filter)
+        .populate('employee_id')
+        .populate('location_id')
+        .sort({ date: -1, punch_in_time: -1 })
+        .skip(skip)
+        .limit(limit)
+        .exec(),
+      this.attendanceModel.countDocuments(filter).exec(),
+    ]);
+
+    return paginate(data, total, page, limit);
   }
 
   async getAttendanceDetail(id: string) {

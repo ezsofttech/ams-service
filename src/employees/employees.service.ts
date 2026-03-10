@@ -13,6 +13,10 @@ import {
   UserRole,
 } from '../entities/index.js';
 import { CreateEmployeeDto, UpdateEmployeeDto } from './dto/employee.dto.js';
+import {
+  PaginationQueryDto,
+  paginate,
+} from '../common/dto/pagination.dto.js';
 
 @Injectable()
 export class EmployeesService {
@@ -43,7 +47,10 @@ export class EmployeesService {
     return result;
   }
 
-  async findAll(search?: string) {
+  async findAll(pagination: PaginationQueryDto, search?: string) {
+    const { page, limit } = pagination;
+    const skip = (page - 1) * limit;
+
     const filter: Record<string, unknown> = { role: UserRole.EMPLOYEE };
     if (search) {
       filter.$or = [
@@ -52,11 +59,19 @@ export class EmployeesService {
         { phone: { $regex: search, $options: 'i' } },
       ];
     }
-    return this.employeeModel
-      .find(filter)
-      .select('-password')
-      .sort({ created_at: -1 })
-      .exec();
+
+    const [data, total] = await Promise.all([
+      this.employeeModel
+        .find(filter)
+        .select('-password')
+        .sort({ created_at: -1 })
+        .skip(skip)
+        .limit(limit)
+        .exec(),
+      this.employeeModel.countDocuments(filter).exec(),
+    ]);
+
+    return paginate(data, total, page, limit);
   }
 
   async findOne(id: string) {

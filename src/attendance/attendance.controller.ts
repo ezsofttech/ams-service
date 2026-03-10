@@ -20,6 +20,7 @@ import { AttendanceService } from './attendance.service.js';
 import { PunchInDto, PunchOutDto } from './dto/attendance.dto.js';
 import { Roles, RolesGuard } from '../auth/roles.guard.js';
 import { UserRole } from '../entities/index.js';
+import { PaginationQueryDto } from '../common/dto/pagination.dto.js';
 
 interface AuthRequest extends Request {
   user: { id: string; employee_id: string; role: string; name: string };
@@ -56,18 +57,19 @@ export class AttendanceController {
   @ApiQuery({ name: 'end_date', required: false })
   getHistory(
     @Req() req: AuthRequest,
+    @Query() pagination: PaginationQueryDto,
     @Query('start_date') startDate?: string,
     @Query('end_date') endDate?: string,
   ) {
-    return this.attendanceService.getHistory(req.user.id, startDate, endDate);
+    return this.attendanceService.getHistory(req.user.id, pagination, startDate, endDate);
   }
 
   @Get('all')
   @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Get all attendance records (Admin)' })
   @ApiQuery({ name: 'date', required: false })
-  getAllAttendance(@Query('date') date?: string) {
-    return this.attendanceService.getAllAttendance(date);
+  getAllAttendance(@Query() pagination: PaginationQueryDto, @Query('date') date?: string) {
+    return this.attendanceService.getAllAttendance(pagination, date);
   }
 
   @Get(':id')

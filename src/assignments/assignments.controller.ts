@@ -6,6 +6,7 @@ import {
   Delete,
   Body,
   Param,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
@@ -17,6 +18,7 @@ import {
 } from './dto/assignment.dto.js';
 import { Roles, RolesGuard } from '../auth/roles.guard.js';
 import { UserRole } from '../entities/index.js';
+import { PaginationQueryDto } from '../common/dto/pagination.dto.js';
 
 @ApiTags('Assignments')
 @ApiBearerAuth()
@@ -35,21 +37,21 @@ export class AssignmentsController {
   @Get()
   @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'List all assignments (Admin)' })
-  findAll() {
-    return this.assignmentsService.findAll();
+  findAll(@Query() pagination: PaginationQueryDto) {
+    return this.assignmentsService.findAll(pagination);
   }
 
   @Get('location/:locationId')
   @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Get assignments by location (Admin)' })
-  findByLocation(@Param('locationId') locationId: string) {
-    return this.assignmentsService.findByLocation(locationId);
+  findByLocation(@Param('locationId') locationId: string, @Query() pagination: PaginationQueryDto) {
+    return this.assignmentsService.findByLocation(locationId, pagination);
   }
 
   @Get('employee/:employeeId')
   @ApiOperation({ summary: 'Get assignments by employee' })
-  findByEmployee(@Param('employeeId') employeeId: string) {
-    return this.assignmentsService.findByEmployee(employeeId);
+  findByEmployee(@Param('employeeId') employeeId: string, @Query() pagination: PaginationQueryDto) {
+    return this.assignmentsService.findByEmployee(employeeId, pagination);
   }
 
   @Put(':id')

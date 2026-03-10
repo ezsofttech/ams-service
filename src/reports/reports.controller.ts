@@ -9,6 +9,7 @@ import {
 import { ReportsService } from './reports.service.js';
 import { Roles, RolesGuard } from '../auth/roles.guard.js';
 import { UserRole } from '../entities/index.js';
+import { PaginationQueryDto } from '../common/dto/pagination.dto.js';
 
 @ApiTags('Reports')
 @ApiBearerAuth()
@@ -25,10 +26,16 @@ export class ReportsController {
   @ApiQuery({ name: 'employee_id', required: false })
   getDailyReport(
     @Query('date') date: string,
+    @Query() pagination: PaginationQueryDto,
     @Query('location_id') locationId?: string,
     @Query('employee_id') employeeId?: string,
   ) {
-    return this.reportsService.getDailyReport(date, locationId, employeeId);
+    return this.reportsService.getDailyReport(
+      date,
+      pagination,
+      locationId,
+      employeeId,
+    );
   }
 
   @Get('weekly')
@@ -39,9 +46,15 @@ export class ReportsController {
   getWeeklyReport(
     @Query('start_date') startDate: string,
     @Query('end_date') endDate: string,
+    @Query() pagination: PaginationQueryDto,
     @Query('employee_id') employeeId?: string,
   ) {
-    return this.reportsService.getWeeklyReport(startDate, endDate, employeeId);
+    return this.reportsService.getWeeklyReport(
+      startDate,
+      endDate,
+      pagination,
+      employeeId,
+    );
   }
 
   @Get('monthly')
@@ -52,11 +65,13 @@ export class ReportsController {
   getMonthlyReport(
     @Query('year') year: string,
     @Query('month') month: string,
+    @Query() pagination: PaginationQueryDto,
     @Query('employee_id') employeeId?: string,
   ) {
     return this.reportsService.getMonthlyReport(
-      parseInt(year),
-      parseInt(month),
+      Number(year),
+      Number(month),
+      pagination,
       employeeId,
     );
   }

@@ -9,6 +9,7 @@ import {
   EmployeeStatus,
   UserRole,
 } from '../entities/index.js';
+import { PaginationQueryDto } from '../common/dto/pagination.dto.js';
 
 @Injectable()
 export class ReportsService {
@@ -19,22 +20,30 @@ export class ReportsService {
     private employeeModel: Model<EmployeeDocument>,
   ) {}
 
-  async getDailyReport(date: string, locationId?: string, employeeId?: string) {
+  async getDailyReport(date: string, pagination: PaginationQueryDto, locationId?: string, employeeId?: string) {
+    const { page, limit } = pagination;
+    const skip = (page - 1) * limit;
+
     const filter: Record<string, unknown> = { date };
     if (locationId) filter.location_id = locationId;
     if (employeeId) filter.employee_id = employeeId;
 
-    const records = await this.attendanceModel
-      .find(filter)
-      .populate('employee_id')
-      .populate('location_id')
-      .sort({ punch_in_time: 1 })
-      .exec();
+    const [records, total] = await Promise.all([
+      this.attendanceModel
+        .find(filter)
+        .populate('employee_id')
+        .populate('location_id')
+        .sort({ punch_in_time: 1 })
+        .skip(skip)
+        .limit(limit)
+        .exec(),
+      this.attendanceModel.countDocuments(filter).exec(),
+    ]);
 
     return {
       report_type: 'daily',
       date,
-      total_records: records.length,
+      total_records: total,
       records: records.map((r: any) => ({
         employee_name: r.employee_id?.name,
         employee_id: r.employee_id?.employee_id,
@@ -43,12 +52,19 @@ export class ReportsService {
         punch_out_time: r.punch_out_time,
         total_work_hours: r.total_work_hours,
       })),
+      meta: {
+        total,
+        page,
+        limit,
+        total_pages: Math.ceil(total / limit),
+      },
     };
   }
 
   async getWeeklyReport(
     startDate: string,
     endDate: string,
+    pagination: PaginationQueryDto,
     employeeId?: string,
   ) {
     const filter: Record<string, unknown> = {
@@ -90,8 +106,14 @@ export class ReportsService {
         employee_id: emp?.employee_id,
         total_working_days: recs.length,
         total_hours_worked: Math.round(totalHours * 100) / 100,
+        late_arrivals: 0,
       });
     }
+
+    // Paginate summary
+    const { page, limit } = pagination;
+    const totalSummary = summary.length;
+    const paginatedSummary = summary.slice((page - 1) * limit, page * limit);
 
     // Calculate absences
     const allEmployees = await this.employeeModel
@@ -106,12 +128,18 @@ export class ReportsService {
       report_type: 'weekly',
       start_date: startDate,
       end_date: endDate,
-      summary,
+      summary: paginatedSummary,
       absences,
+      meta: {
+        total: totalSummary,
+        page,
+        limit,
+        total_pages: Math.ceil(totalSummary / limit),
+      },
     };
   }
 
-  async getMonthlyReport(year: number, month: number, employeeId?: string) {
+  async getMonthlyReport(year: number, month: number, pagination: PaginationQueryDto, employeeId?: string) {
     const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
     const lastDay = new Date(year, month, 0).getDate();
     const endDate = `${year}-${String(month).padStart(2, '0')}-${lastDay}`;
@@ -168,12 +196,23 @@ export class ReportsService {
       });
     }
 
+    // Paginate summary
+    const { page, limit } = pagination;
+    const totalSummary = summary.length;
+    const paginatedSummary = summary.slice((page - 1) * limit, page * limit);
+
     return {
       report_type: 'monthly',
       year,
       month,
       working_days_in_month: workingDays,
-      summary,
+      summary: paginatedSummary,
+      meta: {
+        total: totalSummary,
+        page,
+        limit,
+        total_pages: Math.ceil(totalSummary / limit),
+      },
     };
   }
 }

@@ -6,6 +6,7 @@ import {
   Delete,
   Body,
   Param,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
@@ -17,6 +18,7 @@ import {
 } from './dto/location.dto.js';
 import { Roles, RolesGuard } from '../auth/roles.guard.js';
 import { UserRole } from '../entities/index.js';
+import { PaginationQueryDto } from '../common/dto/pagination.dto.js';
 
 @ApiTags('Locations')
 @ApiBearerAuth()
@@ -34,8 +36,8 @@ export class LocationsController {
 
   @Get()
   @ApiOperation({ summary: 'List all job locations' })
-  findAll() {
-    return this.locationsService.findAll();
+  findAll(@Query() pagination: PaginationQueryDto) {
+    return this.locationsService.findAll(pagination);
   }
 
   @Get(':id')

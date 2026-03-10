@@ -20,6 +20,7 @@ import { EmployeesService } from './employees.service.js';
 import { CreateEmployeeDto, UpdateEmployeeDto } from './dto/employee.dto.js';
 import { Roles, RolesGuard } from '../auth/roles.guard.js';
 import { UserRole } from '../entities/index.js';
+import { PaginationQueryDto } from '../common/dto/pagination.dto.js';
 
 @ApiTags('Employees')
 @ApiBearerAuth()
@@ -39,8 +40,8 @@ export class EmployeesController {
   @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'List all employees (Admin)' })
   @ApiQuery({ name: 'search', required: false })
-  findAll(@Query('search') search?: string) {
-    return this.employeesService.findAll(search);
+  findAll(@Query() pagination: PaginationQueryDto, @Query('search') search?: string) {
+    return this.employeesService.findAll(pagination, search);
   }
 
   @Get(':id')

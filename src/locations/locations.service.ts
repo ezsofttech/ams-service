@@ -6,6 +6,10 @@ import {
   CreateJobLocationDto,
   UpdateJobLocationDto,
 } from './dto/location.dto.js';
+import {
+  PaginationQueryDto,
+  paginate,
+} from '../common/dto/pagination.dto.js';
 
 @Injectable()
 export class LocationsService {
@@ -18,8 +22,21 @@ export class LocationsService {
     return this.locationModel.create(dto);
   }
 
-  async findAll() {
-    return this.locationModel.find().sort({ created_at: -1 }).exec();
+  async findAll(pagination: PaginationQueryDto) {
+    const { page, limit } = pagination;
+    const skip = (page - 1) * limit;
+
+    const [data, total] = await Promise.all([
+      this.locationModel
+        .find()
+        .sort({ created_at: -1 })
+        .skip(skip)
+        .limit(limit)
+        .exec(),
+      this.locationModel.countDocuments().exec(),
+    ]);
+
+    return paginate(data, total, page, limit);
   }
 
   async findOne(id: string) {
