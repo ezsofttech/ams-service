@@ -105,4 +105,14 @@ export class EmployeesService {
     await employee.save();
     return { message: 'Employee deactivated successfully' };
   }
+
+  async activate(id: string) {
+    const employee = await this.employeeModel.findById(id).exec();
+    if (!employee) {
+      throw new NotFoundException('Employee not found');
+    }
+    employee.status = EmployeeStatus.ACTIVE;
+    await employee.save();
+    return { message: 'Employee activated successfully' };
+  }
 }

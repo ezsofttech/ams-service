@@ -64,4 +64,11 @@ export class EmployeesController {
   deactivate(@Param('id') id: string) {
     return this.employeesService.deactivate(id);
   }
+
+  @Patch(':id/activate')
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({ summary: 'Activate employee (Admin)' })
+  activate(@Param('id') id: string) {
+    return this.employeesService.activate(id);
+  }
 }
