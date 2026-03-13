@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import {
   Attendance,
   AttendanceDocument,
@@ -20,13 +20,20 @@ export class ReportsService {
     private employeeModel: Model<EmployeeDocument>,
   ) {}
 
-  async getDailyReport(date: string, pagination: PaginationQueryDto, locationId?: string, employeeId?: string) {
+  async getDailyReport(
+    date: string,
+    pagination: PaginationQueryDto,
+    locationId?: string,
+    employeeId?: string,
+  ) {
     const { page, limit } = pagination;
     const skip = (page - 1) * limit;
 
     const filter: Record<string, unknown> = { date };
-    if (locationId) filter.location_id = locationId;
-    if (employeeId) filter.employee_id = employeeId;
+    if (locationId) filter.location_id = new Types.ObjectId(locationId);
+    if (employeeId) filter.employee_id = new Types.ObjectId(employeeId);
+
+    const availableDates = await this.attendanceModel.distinct('date').exec();
 
     const [records, total] = await Promise.all([
       this.attendanceModel
@@ -70,7 +77,7 @@ export class ReportsService {
     const filter: Record<string, unknown> = {
       date: { $gte: startDate, $lte: endDate },
     };
-    if (employeeId) filter.employee_id = employeeId;
+    if (employeeId) filter.employee_id = new Types.ObjectId(employeeId);
 
     const records = await this.attendanceModel
       .find(filter)
@@ -139,7 +146,12 @@ export class ReportsService {
     };
   }
 
-  async getMonthlyReport(year: number, month: number, pagination: PaginationQueryDto, employeeId?: string) {
+  async getMonthlyReport(
+    year: number,
+    month: number,
+    pagination: PaginationQueryDto,
+    employeeId?: string,
+  ) {
     const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
     const lastDay = new Date(year, month, 0).getDate();
     const endDate = `${year}-${String(month).padStart(2, '0')}-${lastDay}`;
@@ -147,7 +159,7 @@ export class ReportsService {
     const filter: Record<string, unknown> = {
       date: { $gte: startDate, $lte: endDate },
     };
-    if (employeeId) filter.employee_id = employeeId;
+    if (employeeId) filter.employee_id = new Types.ObjectId(employeeId);
 
     const records = await this.attendanceModel
       .find(filter)
