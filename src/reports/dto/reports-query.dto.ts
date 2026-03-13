@@ -42,6 +42,10 @@ export class WeeklyReportQueryDto {
 
   @ApiPropertyOptional()
   @IsOptional()
+  location_id?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
   employee_id?: string;
 
   @ApiPropertyOptional({ default: 1, minimum: 1 })
@@ -72,6 +76,10 @@ export class MonthlyReportQueryDto {
   @Min(1)
   @Max(12)
   month: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  location_id?: string;
 
   @ApiPropertyOptional()
   @IsOptional()

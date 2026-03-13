@@ -30,8 +30,8 @@ export class ReportsService {
     const skip = (page - 1) * limit;
 
     const filter: Record<string, unknown> = { date };
-    if (locationId) filter.location_id = new Types.ObjectId(locationId);
-    if (employeeId) filter.employee_id = new Types.ObjectId(employeeId);
+    if (locationId) filter.location_id = locationId;
+    if (employeeId) filter.employee_id = employeeId;
 
     const availableDates = await this.attendanceModel.distinct('date').exec();
 
@@ -73,11 +73,13 @@ export class ReportsService {
     endDate: string,
     pagination: PaginationQueryDto,
     employeeId?: string,
+    locationId?: string,
   ) {
     const filter: Record<string, unknown> = {
       date: { $gte: startDate, $lte: endDate },
     };
-    if (employeeId) filter.employee_id = new Types.ObjectId(employeeId);
+    if (employeeId) filter.employee_id = employeeId;
+    if (locationId) filter.location_id = locationId;
 
     const records = await this.attendanceModel
       .find(filter)
@@ -151,6 +153,7 @@ export class ReportsService {
     month: number,
     pagination: PaginationQueryDto,
     employeeId?: string,
+    locationId?: string,
   ) {
     const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
     const lastDay = new Date(year, month, 0).getDate();
@@ -159,7 +162,8 @@ export class ReportsService {
     const filter: Record<string, unknown> = {
       date: { $gte: startDate, $lte: endDate },
     };
-    if (employeeId) filter.employee_id = new Types.ObjectId(employeeId);
+    if (employeeId) filter.employee_id = employeeId;
+    if (locationId) filter.location_id = locationId;
 
     const records = await this.attendanceModel
       .find(filter)
