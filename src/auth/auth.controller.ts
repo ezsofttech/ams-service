@@ -37,12 +37,10 @@ export class AuthController {
     return this.authService.refreshTokens(dto);
   }
 
-  @UseGuards(AuthGuard('jwt'))
-  @ApiBearerAuth()
   @Put('change-password')
-  @ApiOperation({ summary: 'Change current user password' })
-  changePassword(@Req() req: AuthRequest, @Body() dto: ChangePasswordDto) {
-    return this.authService.changePassword(req.user.id, dto);
+  @ApiOperation({ summary: 'Admin changes any employee password using admin refresh token' })
+  changePassword(@Body() dto: ChangePasswordDto) {
+    return this.authService.changePassword(dto);
   }
 
   @UseGuards(AuthGuard('jwt'))

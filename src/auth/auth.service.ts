@@ -2,6 +2,8 @@ import {
   Injectable,
   UnauthorizedException,
   ConflictException,
+  BadRequestException,
+  NotFoundException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
@@ -102,23 +104,40 @@ export class AuthService {
     };
   }
 
-  async changePassword(userId: string, dto: ChangePasswordDto) {
-    const employee = await this.employeeModel.findById(userId).exec();
-    if (!employee) {
-      throw new UnauthorizedException('User not found');
+  async changePassword(dto: ChangePasswordDto) {
+    const payload = this.verifyRefreshToken(dto.refresh_token);
+    if (payload.role !== UserRole.ADMIN) {
+      throw new UnauthorizedException('Only admin can change passwords');
     }
 
-    const isValid = await bcrypt.compare(
-      dto.current_password,
-      employee.password,
-    );
-    if (!isValid) {
-      throw new UnauthorizedException('Current password is incorrect');
+    const admin = await this.employeeModel.findById(payload.sub).exec();
+    if (!admin || admin.role !== UserRole.ADMIN) {
+      throw new UnauthorizedException('Invalid admin refresh token');
+    }
+
+    const employeeFilter =
+      dto.id != null
+        ? { _id: dto.id }
+        : dto.employee_id != null
+          ? { employee_id: dto.employee_id }
+          : dto.email != null
+            ? { email: dto.email }
+            : null;
+
+    if (!employeeFilter) {
+      throw new BadRequestException(
+        'Provide one employee detail: id, employee_id, or email',
+      );
+    }
+
+    const employee = await this.employeeModel.findOne(employeeFilter).exec();
+    if (!employee) {
+      throw new NotFoundException('Employee not found');
     }
 
     employee.password = await bcrypt.hash(dto.new_password, 10);
     await employee.save();
-    return { message: 'Password changed successfully' };
+    return { message: 'Password changed successfully', employee_id: employee.employee_id };
   }
 
   async getProfile(userId: string) {
@@ -134,9 +153,7 @@ export class AuthService {
 
   async refreshTokens(dto: RefreshTokenDto) {
     try {
-      const payload = this.jwtService.verify(dto.refresh_token, {
-        secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
-      });
+      const payload = this.verifyRefreshToken(dto.refresh_token);
 
       const employee = await this.employeeModel
         .findById(payload.sub)
@@ -155,6 +172,20 @@ export class AuthService {
         access_token: this.generateAccessToken(newPayload),
         refresh_token: this.generateRefreshToken(newPayload),
       };
+    } catch {
+      throw new UnauthorizedException('Invalid or expired refresh token');
+    }
+  }
+
+  private verifyRefreshToken(refreshToken: string) {
+    try {
+      return this.jwtService.verify<{
+        sub: string;
+        role: UserRole;
+        employee_id: string;
+      }>(refreshToken, {
+        secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
+      });
     } catch {
       throw new UnauthorizedException('Invalid or expired refresh token');
     }

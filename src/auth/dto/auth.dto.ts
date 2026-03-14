@@ -37,13 +37,38 @@ export class RegisterAdminDto {
 }
 
 export class ChangePasswordDto {
-  @ApiProperty({ example: 'oldPassword123' })
+  @ApiProperty({
+    description: 'Admin refresh token used to authorize password reset',
+    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+  })
   @IsNotEmpty()
-  current_password: string;
+  refresh_token: string;
 
   @ApiProperty({ example: 'newPassword456' })
   @IsNotEmpty()
   new_password: string;
+
+  @ApiPropertyOptional({
+    description: 'Employee document ID',
+    example: '67d2cb8262dbe6de1af4e7ae',
+  })
+  @IsOptional()
+  id?: string;
+
+  @ApiPropertyOptional({
+    description: 'Employee ID assigned by the system',
+    example: 'BOSS-EMP-0001',
+  })
+  @IsOptional()
+  employee_id?: string;
+
+  @ApiPropertyOptional({
+    description: 'Employee email',
+    example: 'employee@boss.com',
+  })
+  @IsOptional()
+  @IsEmail()
+  email?: string;
 }
 
 export class RefreshTokenDto {
